@@ -4,6 +4,7 @@ install/
 log/
 
 # exclude the repositories
+src/launch_ros2_control
 src/ros2_control
 src/ros2_control_demos
 src/ros2_controllers

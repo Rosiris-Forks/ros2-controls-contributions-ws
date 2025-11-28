@@ -1,4 +1,8 @@
 repositories:
+  src/launch_ros2_control:
+    type: git
+    url: git@github.com:SuperJappie08/launch_ros2_control.git
+    version: jazzy
   src/ros2_control:
     type: git
     url: git@github.com:Rosiris-Forks/ros2_control.git
@@ -6,7 +10,7 @@ repositories:
   src/ros2_control_demos:
     type: git
     url: git@github.com:Rosiris-Forks/ros2_control_demos.git
-    version: master
+    version: ros2_control_launch_action
   src/ros2_controllers:
     type: git
     url: git@github.com:Rosiris-Forks/ros2_controllers.git
