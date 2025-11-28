@@ -42,6 +42,10 @@
     "runArgs": [
         "-e",
         "DISPLAY=${env:DISPLAY}",
+        "-e",
+        "SSH_AUTH_SOCK=${env:SSH_AUTH_SOCK}",
+        "-v",
+        "${env:SSH_AUTH_SOCK}:${env:SSH_AUTH_SOCK}",
         "-v",
         "/tmp/.X11-unix:/tmp/.X11-unix",
         "--network=host",
@@ -50,9 +54,6 @@
     "forwardPorts": [],
     "workspaceMount": "source=${localWorkspaceFolder},target=/home/${localEnv:USER}/workspace/,type=bind,consistency=cached",
     "workspaceFolder": "/home/${localEnv:USER}/workspace/",
-    "mounts": [
-        "source=${env:HOME}/.ssh,target=/home/${localEnv:USER}/.ssh,type=bind,consistency=cached"
-    ],
     "containerEnv": {
         "ROS_AUTOMATIC_DISCOVERY_RANGE": "SUBNET",
         "ROS_DOMAIN_ID": "0",
