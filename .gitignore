@@ -4,7 +4,6 @@ install/
 log/
 
 # exclude the repositories
-src/realtime_tools
 src/ros2_control
 src/ros2_control_demos
 src/ros2_controllers

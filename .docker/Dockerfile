@@ -18,8 +18,10 @@ ENV PATH=$PATH:/home/$USER/.local/bin
 # Environment - Setup internationalization and styles.
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
+RUN apt-get update && apt-get dist-upgrade -y
+
 # Packages - Update and Install
-RUN apt-get update && apt-get install -y \
+RUN apt-get install -y \
     build-essential \
     bash-completion \
     cmake \

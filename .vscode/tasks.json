@@ -91,7 +91,7 @@
       "label": "vcs import",
       "type": "shell",
       "group": "build",
-      "command": "vcs import --input ${input:repose_file_path} --skip-existing --workers 1",
+      "command": "vcs import --input .repos/${input:vcs_pull_type}.repos --skip-existing --workers 1",
       "options": {
         "cwd": "${workspaceFolder}"
       },
@@ -106,9 +106,14 @@
       "default": ""
     },
     {
-      "id": "repose_file_path",
-      "type": "promptString",
-      "description": "Path to the repose file you want to import.",
+      "id": "vcs_pull_type",
+      "type": "pickString",
+      "description": "If repose should be clone using ssh or html.",
+      "options": [
+        "ssh",
+        "html",
+      ],
+      "default": "ssh"
     },
     {
       "id": "clean_pattern",
