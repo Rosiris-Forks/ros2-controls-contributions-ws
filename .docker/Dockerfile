@@ -22,8 +22,8 @@ RUN apt-get update && apt-get dist-upgrade -y
 
 # Packages - Update and Install
 RUN apt-get install -y \
-    build-essential \
     bash-completion \
+    build-essential \
     cmake \
     curl \
     gdb \
@@ -35,6 +35,7 @@ RUN apt-get install -y \
     python3-venv \
     ros-dev-tools \
     ros-rolling-rmw-cyclonedds-cpp \
+    ros-rolling-rqt* \
     software-properties-common \
     sudo \
     trash-cli \
