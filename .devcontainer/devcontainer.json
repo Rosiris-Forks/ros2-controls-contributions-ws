@@ -40,14 +40,9 @@
         }
     },
     "runArgs": [
-        "-e",
-        "DISPLAY=${env:DISPLAY}",
-        "-e",
-        "SSH_AUTH_SOCK=${env:SSH_AUTH_SOCK}",
-        "-v",
-        "${env:SSH_AUTH_SOCK}:${env:SSH_AUTH_SOCK}",
-        "-v",
-        "/tmp/.X11-unix:/tmp/.X11-unix",
+        "--name", "${localWorkspaceFolderBasename}",
+        "-e", "DISPLAY=${env:DISPLAY}",
+        "-v", "/tmp/.X11-unix:/tmp/.X11-unix",
         "--network=host",
         "--gpus=all"
     ],
