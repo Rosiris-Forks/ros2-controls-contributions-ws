@@ -1,4 +1,8 @@
 repositories:
+  src/realtime_tools:
+    type: git
+    url: git@github.com:ros-controls/realtime_tools.git
+    version: master
   src/ros2_control:
     type: git
     url: git@github.com:Rosiris-Forks/ros2_control.git
