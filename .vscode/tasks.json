@@ -97,6 +97,16 @@
       },
       "problemMatcher": []
     },
+    {
+      "label": "vcs import",
+      "type": "shell",
+      "group": "build",
+      "command": "vcs import --input .repos/${input:vcs_pull_type}.repos --workers 1 ${input:additional_flags}",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
   ],
   "inputs": [
     {
@@ -114,6 +124,12 @@
         "html",
       ],
       "default": "ssh"
+    },
+    {
+      "id": "additional_flags",
+      "type": "promptString",
+      "description": "Pass additional flags to commands.",
+      "default": ""
     },
     {
       "id": "clean_pattern",
