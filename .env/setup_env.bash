@@ -53,6 +53,9 @@ setup_bashrc_bootstrap() {
 }
 
 function setup_env() {
+    # Enable bash completion for colcon
+    eval "$(register-python-argcomplete colcon)"
+    
     setup_bashrc_bootstrap
 
     setup_global_gitignore
