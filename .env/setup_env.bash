@@ -32,8 +32,14 @@ function setup_global_gitignore() {
 }
 
 setup_bashrc_bootstrap() {
-    local guard_file="$HOME/.env_setup_run"
-    local source_line="if [ -f \"\$HOME/workspace/.env/setup_env.bash\" ]; then source \"\$HOME/workspace/.env/setup_env.bash\"; fi"
+    local guard_file="$HOME/.env_setup_completed"
+    local env_dir
+    env_dir="$(setup_env_dir)"
+
+    # write as $HOME/..., not /Users/you/...
+    local relative_env_dir="${env_dir/#$HOME/\$HOME}"
+
+    local source_line="if [ -f \"$relative_env_dir/setup_env.bash\" ]; then source \"$relative_env_dir/setup_env.bash\"; fi"
 
     # Only add to .bashrc if we haven't already
     if [ ! -f "$guard_file" ]; then
