@@ -91,16 +91,6 @@
       "label": "vcs import",
       "type": "shell",
       "group": "build",
-      "command": "vcs import --input .repos/${input:vcs_pull_type}.repos --skip-existing --workers 1",
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "vcs import",
-      "type": "shell",
-      "group": "build",
       "command": "vcs import --input .repos/${input:vcs_pull_type}.repos --workers 1 ${input:additional_flags}",
       "options": {
         "cwd": "${workspaceFolder}"
