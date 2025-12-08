@@ -50,9 +50,6 @@ export TERMINAL_BG_COLOR_LIGHT_CYAN='\e[1;46m'
 export TERMINAL_BG_COLOR_LIGHT_GRAY='\e[47m'
 export TERMINAL_BG_COLOR_WHITE='\e[1;47m'
 
-if [ -n "$SSH_CLIENT" ]; then text="-ssh"
-fi
-
 function get_gitbranch {
   git branch --show-current 2> /dev/null
 }
@@ -172,14 +169,81 @@ function full_qualified_git_branch {
   fi
 }
 
+function detect_environment {
+    # Detect remote SSH
+    if [[ -n "$SSH_CONNECTION" ]] || [[ -n "$SSH_TTY" ]]; then
+        echo "remote"
+        return
+    fi
+
+    # Detect Docker container
+    if [[ -f "/.dockerenv" ]] || grep -qi docker /proc/1/cgroup 2>/dev/null; then
+        echo "docker"
+        return
+    fi
+
+    # Default: local machine
+    echo "local"
+}
+
+function env_color {
+    local env
+    env="$(detect_environment)"
+
+    case "$env" in
+        local)
+            echo -e "${TERMINAL_COLOR_GREEN}"
+            ;;
+        remote)
+            echo -e "${TERMINAL_COLOR_YELLOW}"
+            ;;
+        docker)
+            # Assuming "local-like"
+            echo -e "${TERMINAL_COLOR_YELLOW}"
+            ;;
+    esac
+}
+
+function env_tag {
+    local env
+    env="$(detect_environment)"
+
+    case "$env" in
+        local)
+            echo ""
+            ;;
+        docker)
+            echo "cntr"
+            ;;
+        remote)
+            echo "ssh"
+            ;;
+    esac
+}
+
+function full_qualified_env_tag {
+    local tag
+    tag="$(env_tag)"
+    local color
+    color="$(env_color)"
+
+    if [[ -n "$tag" ]]; then
+        echo "[${color}${tag}]"
+    fi
+}
+
 function __update_prompt {
   local git_component
   git_component="$(full_qualified_git_branch)"
+  local env_color
+  env_color="$(env_color)"
+  local env_tag
+  env_tag="$(full_qualified_env_tag)"
 
   PS1="\[${TERMINAL_COLOR_LIGHT_GREEN}\]\u\
 \[${TERMINAL_COLOR_LIGHT_GRAY}\]@\
-\[${TERMINAL_COLOR_BROWN}\]\h\
-\[${TERMINAL_COLOR_YELLOW}\]${text}\
+\[${env_color}\]\h\
+\[${env_tag}\]\
 \[${TERMINAL_COLOR_LIGHT_GRAY}\]:\
 \[${git_component}\]\
 \[${TERMINAL_COLOR_GREEN}\]>\
