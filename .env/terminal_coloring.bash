@@ -57,49 +57,134 @@ function get_gitbranch {
   git branch --show-current 2> /dev/null
 }
 
-function parse_git_bracket {
-  if [[ "$(get_gitbranch)" != '' ]]; then
-    echo "<"
+function get_remote_status_symbol {
+  # Return empty if not in repo or no branch
+  local branch
+  branch="$(git branch --show-current 2>/dev/null)"
+  if [[ -z "$branch" ]]; then
+    echo ""
+    return
+  fi
+
+  # Capture porcelain v2 status lines
+  local status
+  status="$(git status --porcelain=2 --branch 2>/dev/null)"
+
+  # Extract ahead/behind from "branch.ab"
+  local ahead behind
+
+  ahead="$(echo "$status" | grep "^# branch.ab" | sed -E 's/.*\+([0-9]+).*/\1/')"
+  behind="$(echo "$status" | grep "^# branch.ab" | sed -E 's/.*-([0-9]+).*/\1/')"
+
+  # If both values empty → no upstream or divergence not reported
+  if [[ -z "$ahead" && -z "$behind" ]]; then
+    echo ""
+    return
+  fi
+
+  if [[ "$ahead" -gt 0 && "$behind" -gt 0 ]]; then
+    echo "!"   # diverged
+  elif [[ "$ahead" -gt 0 ]]; then
+    echo "+"   # ahead only
+  elif [[ "$behind" -gt 0 ]]; then
+    echo "-"   # behind only
+  else
+    echo ""    # clean/no divergence
   fi
 }
 
-function set_git_color {
-  if [[ "$(get_gitbranch)" != '' ]]; then
-    # Get the status of the repo and chose a color accordingly
-    local STATUS=$(LANG=en_GB LANGUAGE=en git status 2>&1)
-    if [[ "$STATUS" == *'nothing added to commit but untracked files present'* ]]; then
-      # blue if there are only untracked files
-      color=${TERMINAL_COLOR_LIGHT_RED}
-    elif [[ "$STATUS" == *'not staged for commit'* ]]; then
-      # red if nothing added to commit but tracked files are changed
-      color=${TERMINAL_COLOR_RED}
-    elif [[ "$STATUS" != *'working tree clean'* ]]; then
-      # changes present and added to commit - untracked files may exist
-      color=${TERMINAL_COLOR_YELLOW}
-    elif [[ "$STATUS" == *'Your branch is ahead'* ]]; then
-      # yellow if need to push
-      color=${TERMINAL_COLOR_BLUE}
-    elif [[ "$STATUS" == *' have diverged,'* ]]; then
-      # brown if need to force push
-      color=${TERMINAL_COLOR_BROWN}
-    else
-      # else green
-      color=${TERMINAL_COLOR_GREEN}
+function get_status_color {
+  local previous_color
+  previous_color=$1
+  local porcelain
+  porcelain="$(git status --porcelain 2>/dev/null)"
+
+  if [[ -z "$(git rev-parse --is-inside-work-tree 2>/dev/null)" ]]; then
+    echo "${TERMINAL_COLOR_GREEN}"
+    return
+  fi
+
+  # Untracked (??) or modified (M, A, D on right column)
+  if echo "$porcelain" | grep -qE "^\?\?|^.M|^..M|^.D|^..D"; then
+    echo "${TERMINAL_COLOR_RED}"
+    return
+  fi
+
+  # Staged only (left column: A, M, D; right column clean or nothing)
+  if echo "$porcelain" | grep -qE "^(A.|M.|D.)"; then
+    echo "${TERMINAL_COLOR_BROWN}" # "orange" → mapped to BROWN
+    return
+  fi
+  echo "${previous_color}"
+}
+
+function get_stash_color {
+  local previous_color
+  previous_color=$1
+  if [[ -n "$(git rev-parse --is-inside-work-tree 2>/dev/null)" ]] \
+     && git stash list 2>/dev/null | grep -q .; then
+    echo "${TERMINAL_COLOR_YELLOW}"
+  fi
+  echo "${previous_color}"
+}
+
+function get_git_bracket {
+  local branch
+  branch="$(get_gitbranch)"
+
+  if [[ -n "$branch" ]]; then
+    echo "${TERMINAL_COLOR_GREEN}<"
+  else
+    echo ""
+  fi
+}
+
+function get_git_branch_and_status_symbol {
+  local branch
+  branch="$(get_gitbranch)"
+
+  if [[ -n "$branch" ]]; then
+    local status_symbol
+    status_symbol="$(get_remote_status_symbol)"
+
+    if [[ -n "$status_symbol" ]]; then
+      status_symbol=" ${status_symbol}"
     fi
-
-    echo -e "${color}"
+    echo "${branch}${status_symbol}"
   fi
 }
 
-function parse_git_branch_and_add_brackets {
-  gitbranch="$(get_gitbranch)"
+function full_qualified_git_branch {
+  local branch
+  branch="$(get_git_branch_and_status_symbol)"
+  local git_bracket="$(get_git_bracket)"
+  local default_color="${TERMINAL_COLOR_GREEN}"
 
-  if [[ "$gitbranch" != '' ]]; then
-    echo "<${gitbranch}"
+  if [[ -n "$branch" ]]; then
+    local stash_color
+    stash_color="$(get_stash_color ${default_color})"
+    local status_color
+    status_color="$(get_status_color ${stash_color})"
+
+    echo "${git_bracket}${status_color}${branch}"
+  else
+    echo ""
   fi
 }
 
+function __update_prompt {
+  local git_component
+  git_component="$(full_qualified_git_branch)"
 
-# Version with git color
-export PS1="\[${TERMINAL_COLOR_LIGHT_GREEN}\]"'\u\['"\[${TERMINAL_COLOR_LIGHT_GRAY}\]"'@\['"\[${TERMINAL_COLOR_BROWN}\]"'\h\['"\[${TERMINAL_COLOR_YELLOW}\]"'${text}\['"\[${TERMINAL_COLOR_LIGHT_GRAY}\]"':\['"\[${TERMINAL_COLOR_GREEN}\]"'$(parse_git_bracket)'"\["'$(set_git_color)'"\]"'$(get_gitbranch)'"\[${TERMINAL_COLOR_GREEN}\]"'>'"\[${TERMINAL_COLOR_LIGHT_PURPLE}\]"'\W\['"\[${TERMINAL_COLOR_LIGHT_PURPLE}\]"'$\['"\[${TERMINAL_COLOR_NC}\]"'\[\e[m\] '
-
+  PS1="\[${TERMINAL_COLOR_LIGHT_GREEN}\]\u\
+\[${TERMINAL_COLOR_LIGHT_GRAY}\]@\
+\[${TERMINAL_COLOR_BROWN}\]\h\
+\[${TERMINAL_COLOR_YELLOW}\]${text}\
+\[${TERMINAL_COLOR_LIGHT_GRAY}\]:\
+\[${git_component}\]\
+\[${TERMINAL_COLOR_GREEN}\]>\
+\[${TERMINAL_COLOR_LIGHT_PURPLE}\]\W\
+\[${TERMINAL_COLOR_LIGHT_PURPLE}\]\$\
+\[${TERMINAL_COLOR_NC}\] "
+}
+PROMPT_COMMAND=__update_prompt
